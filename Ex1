@@ -1,0 +1,4 @@
+Apartat 1 (1punt). Subprograma que donades una eleccions (PK) i un
+municipi (PK) ens retorni el número de vots totals que hi han hagut per aquest
+municipi.
+spMunicipiNumVots(pEleccioId, pMunicipiId)
