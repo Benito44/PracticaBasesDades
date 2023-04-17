@@ -12,3 +12,40 @@ candidatura_id)
 Per omplir aquesta taula crea un subprograma encarregat de fer aquesta feina. Aquest subprograma
 ha de rebre com a paràmetres la PK de les eleccions i la PK de la província.
 spCalcularLleiHontEleccionsProvincia(pEleccioId, pProvinciaId)
+
+
+
+
+#ejercicio para probar
+CREATE TABLE llei_dhont (
+eleccio_id TINYINT,
+provincia_id TINYINT,
+candidatura_id INT,
+num_escons TINYINT,
+CONSTRAINT pk_llei_dhont PRIMARY KEY (eleccio_id, provincia_id,
+candidatura_id)
+);
+DELIMITER //
+-- DROP PROCEDURE IF EXISTS spCalcularLleiHontEleccionsProvincia;
+CREATE PROCEDURE spCalcularLleiHontEleccionsProvincia (
+  IN pEleccioId TINYINT,
+  IN pProvinciaId TINYINT
+)
+BEGIN
+  DECLARE quotient INT DEFAULT 0;
+  DECLARE maxEsconsTaula INT;
+  SELECT MAX(num_escons) INTO maxEsconsTaula FROM llei_dhont;
+  WHILE quotient < maxEsconsTaula DO
+    UPDATE llei_dhont 
+    SET num_escons = (SELECT COUNT(*) FROM (
+        SELECT l.*, ROUND(CAST(m.vots_obtinguts AS FLOAT) / (l.num_escons + 1), 2) AS cocient
+        FROM llei_dhont l
+        INNER JOIN municipis m ON l.provincia_id = m.provincia_id AND l.eleccio_id = m.eleccio_id AND l.candidatura_id = m.candidatura_id
+        WHERE l.eleccio_id = pEleccioId AND l.provincia_id = pProvinciaId
+        ORDER BY cocient DESC
+        LIMIT 1
+      ) AS t1)
+    WHERE eleccio_id = pEleccioId AND provincia_id = pProvinciaId;
+    SELECT ROW_COUNT() INTO quotient;
+  END WHILE;
+END;
