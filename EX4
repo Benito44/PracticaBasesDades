@@ -1,0 +1,14 @@
+Apartat 4 (3 punts). Volem tenir una taula anomenada llei_dhont a on hi hagi per cada provincia i
+candidatura el número d’escons que ha tret la candidatura en aquella província.
+DDL per crear la taula llei_dhont
+CREATE TABLE llei_dhont (
+eleccio_id TINYINT,
+provincia_id TINYINT,
+candidatura_id INT,
+num_escons TINYINT,
+CONSTRAINT pk_llei_dhont PRIMARY KEY (eleccio_id, provincia_id,
+candidatura_id)
+)
+Per omplir aquesta taula crea un subprograma encarregat de fer aquesta feina. Aquest subprograma
+ha de rebre com a paràmetres la PK de les eleccions i la PK de la província.
+spCalcularLleiHontEleccionsProvincia(pEleccioId, pProvinciaId)
