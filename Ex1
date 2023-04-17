@@ -2,3 +2,17 @@ Apartat 1 (1punt). Subprograma que donades una eleccions (PK) i un
 municipi (PK) ens retorni el número de vots totals que hi han hagut per aquest
 municipi.
 spMunicipiNumVots(pEleccioId, pMunicipiId)
+
+DELIMITER //
+CREATE FUNCTION spMunicipiNumVots(pEleccioId INT, pMunicipiId INT) RETURNS INT
+	DETERMINISTIC 
+	BEGIN
+	DECLARE vRetorn INT DEFAULT NULL;
+	IF pEleccioId IS NOT NULL OR pEleccioId > 0 OR pMunicipiId IS NOT NULL OR pMunicipiId > 0 THEN
+	SET vRetorn = 	(SELECT SUM(vots)
+					FROM vots_candidatures_mun
+					WHERE eleccio_id = pEleccioId AND municipi_id = pMunicipiId);
+	END IF;
+	RETURN vRetorn;
+END
+//
