@@ -4,3 +4,21 @@ taula
 Aquest subprograma tindrà 2 paràmetres: les eleccions (PK) i el municipi(PK) pel qual volem recalcular.
 (+1 punt) Si l’últim paràmetre és NULL cal recalular/reinicialitzar els vots vàlids de tots els municipis.
 spReinicialitzaVotsValids(pEleccioId, pMunicipiId)
+
+
+
+CREATE PROCEDURE spReinicialitzaVotsValids(IN pEleccioId INT,IN pMunicipiId INT)
+BEGIN
+IF pMunicipiId IS NULL THEN
+-- Si el parámetro del municipio es nulo, se recalculan todos los municipios
+	UPDATE eleccions_municipis
+	SET vots_valids = vots_candidatures + vots_blanc;
+ELSE
+-- Si se especifica el municipio, solo se recalcula ese municipio
+	UPDATE eleccions_municipis
+	SET vots_valids = vots_candidatures + vots_blanc
+	WHERE eleccio_id = pEleccioId AND municipi_id = pMunicipiId;
+END IF;
+END //
+
+DELIMITER ;
