@@ -1,0 +1,6 @@
+Apartat 2 (1 punt). Subprograma que recalculi/reinicialitzi el camp vots_valids. Recorda que els
+vots vàlids són la suma dels vots_candidatures i els vots_blanc. Cal modificar els valors de la
+taula
+Aquest subprograma tindrà 2 paràmetres: les eleccions (PK) i el municipi(PK) pel qual volem recalcular.
+(+1 punt) Si l’últim paràmetre és NULL cal recalular/reinicialitzar els vots vàlids de tots els municipis.
+spReinicialitzaVotsValids(pEleccioId, pMunicipiId)
