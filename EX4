@@ -19,9 +19,9 @@ spCalcularLleiHontEleccionsProvincia(pEleccioId, pProvinciaId)
 #ejercicio para probar
 
 USE mydb;
--- DROP PROCEDURE if exists calcul_escons;
+DROP PROCEDURE if exists calcul_escons;
 DELIMITER //
-CREATE PROCEDURE calcul_escons(IN Pprovincia_id INT)
+CREATE PROCEDURE calcul_escons(IN Pprovincia_id INT,IN Peleccio_id INT)
 BEGIN
     DECLARE num_escons INT;
     DECLARE total_vots_prov INT;
@@ -39,6 +39,7 @@ BEGIN
     -- Obtenemos los votos totales para la provincia dada
     SELECT SUM(vots) INTO total_vots_prov FROM vots_candidatures_prov WHERE provincia_id = Pprovincia_id;
     
+        DROP TABLE if exists tmp_candidatures;
     -- Creamos una tabla temporal para almacenar los resultados intermedios
     CREATE TABLE tmp_candidatures (
         candidatura_id INT,
@@ -47,23 +48,24 @@ BEGIN
     );
     
     -- Insertamos los votos de cada candidatura en la tabla temporal
-    INSERT INTO tmp_candidatures (candidatura_id, num_vots_provincia) SELECT candidatura_id, vots FROM vots_candidatures_prov
-    WHERE provincia_id = Pprovincia_id GROUP BY candidatura_id;
+    INSERT INTO tmp_candidatures (candidatura_id, num_vots) SELECT candidatura_id, vots FROM vots_candidatures_prov
+    WHERE provincia_id = Pprovincia_id GROUP BY provincia_id, candidatura_id;
     
     -- Eliminamos cualquier candidatura que tenga menos del 5% de los votos totales para la provincia
     SET num_vots_eliminar = FLOOR(total_vots_prov * 0.05);
     UPDATE tmp_candidatures SET eliminada = TRUE WHERE num_vots < num_vots_eliminar;
     SELECT COUNT(*) INTO eliminats FROM tmp_candidatures WHERE eliminada = TRUE;
     
+DROP TABLE if exists tmp_escons;
 -- Crear tabla temporal para guardar los resultados
 CREATE TABLE tmp_escons (eleccio_id INT, provincia_id INT, candidatura_id INT, esco_id INT, num_vots FLOAT);
 
 -- Loop para dividir los votos por los escaños correspondientes
-WHILE esco <= num_escons DO
+WHILE(esco < num_escons) DO
     INSERT INTO tmp_escons (eleccio_id, provincia_id, candidatura_id, esco_id, num_vots)
     SELECT Peleccio_id, Pprovincia_id, c.candidatura_id, esco, c.num_vots / esco
     FROM tmp_candidatures c
-    WHERE c.provincia_id = Pprovincia_id AND c.eliminada = FALSE;
+    WHERE c.eliminada = FALSE;
     SET esco = esco + 1;
 END WHILE;
 
@@ -76,3 +78,5 @@ ORDER BY eleccio_id, provincia_id, num_escons_finals DESC;
 */
 -- Eliminar tabla temporal
 END //
+
+CALL calcul_escons(4,1);
