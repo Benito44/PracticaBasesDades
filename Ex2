@@ -6,7 +6,7 @@ Aquest subprograma tindrà 2 paràmetres: les eleccions (PK) i el municipi(PK) p
 spReinicialitzaVotsValids(pEleccioId, pMunicipiId)
 
 
-
+DELIMITER //
 CREATE PROCEDURE spReinicialitzaVotsValids(IN pEleccioId INT,IN pMunicipiId INT)
 BEGIN
 IF pMunicipiId IS NULL THEN
@@ -19,6 +19,5 @@ ELSE
 	SET vots_valids = vots_candidatures + vots_blanc
 	WHERE eleccio_id = pEleccioId AND municipi_id = pMunicipiId;
 END IF;
-END //
-
-DELIMITER ;
+END 
+//
