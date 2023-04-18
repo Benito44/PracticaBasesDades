@@ -17,35 +17,27 @@ spCalcularLleiHontEleccionsProvincia(pEleccioId, pProvinciaId)
 
 
 #ejercicio para probar
-CREATE TABLE llei_dhont (
-eleccio_id TINYINT,
-provincia_id TINYINT,
-candidatura_id INT,
-num_escons TINYINT,
-CONSTRAINT pk_llei_dhont PRIMARY KEY (eleccio_id, provincia_id,
-candidatura_id)
-);
-DELIMITER //
--- DROP PROCEDURE IF EXISTS spCalcularLleiHontEleccionsProvincia;
-CREATE PROCEDURE spCalcularLleiHontEleccionsProvincia (
-  IN pEleccioId TINYINT,
-  IN pProvinciaId TINYINT
-)
-BEGIN
-  DECLARE quotient INT DEFAULT 0;
-  DECLARE maxEsconsTaula INT;
-  SELECT MAX(num_escons) INTO maxEsconsTaula FROM llei_dhont;
-  WHILE quotient < maxEsconsTaula DO
-    UPDATE llei_dhont 
-    SET num_escons = (SELECT COUNT(*) FROM (
-        SELECT l.*, ROUND(CAST(m.vots_obtinguts AS FLOAT) / (l.num_escons + 1), 2) AS cocient
-        FROM llei_dhont l
-        INNER JOIN municipis m ON l.provincia_id = m.provincia_id AND l.eleccio_id = m.eleccio_id AND l.candidatura_id = m.candidatura_id
-        WHERE l.eleccio_id = pEleccioId AND l.provincia_id = pProvinciaId
-        ORDER BY cocient DESC
-        LIMIT 1
-      ) AS t1)
-    WHERE eleccio_id = pEleccioId AND provincia_id = pProvinciaId;
-    SELECT ROW_COUNT() INTO quotient;
-  END WHILE;
-END;
+
+-- Crear tabla temporal para guardar los resultados
+CREATE TEMPORARY TABLE tmp_escons (candidatura_id INT, esco_id INT, num_vots FLOAT);
+
+-- Loop para dividir los votos por los escaños correspondientes
+DECLARE esco INT DEFAULT 1;
+WHILE esco <= num_escons DO
+    INSERT INTO tmp_escons (candidatura_id, esco_id, num_vots)
+    SELECT c.candidatura_id, esco, c.num_vots / esco
+    FROM candidaturas c
+    WHERE c.provincia_id = provincia_id AND c.eliminada = FALSE;
+    SET esco = esco + 1;
+END WHILE;
+
+-- Seleccionar los resultados más altos hasta el número de escaños correspondiente
+INSERT INTO lleis_dhont (eleccio_id, provincia_id, candidatura_id, num_escons_finals)
+SELECT eleccio_id, provincia_id, candidatura_id, SUM(esco_id <= num_escons) as num_escons_finals
+FROM tmp_escons
+GROUP BY eleccio_id, provincia_id, candidatura_id
+ORDER BY eleccio_id, provincia_id, num_escons_finals DESC;
+
+-- Eliminar tabla temporal
+DROP TABLE tmp_escons;
+
