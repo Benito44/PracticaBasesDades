@@ -18,11 +18,10 @@ spCalcularLleiHontEleccionsProvincia(pEleccioId, pProvinciaId)
 
 #ejercicio para probar
 
-DELIMETER //
-CREATE PROCEDURE calcul_escons(
-    IN eleccio_id INT,
-    IN provincia_id INT
-)
+USE mydb;
+-- DROP PROCEDURE if exists calcul_escons;
+DELIMITER //
+CREATE PROCEDURE calcul_escons(IN Pprovincia_id INT)
 BEGIN
     DECLARE num_escons INT;
     DECLARE total_vots_prov INT;
@@ -32,15 +31,16 @@ BEGIN
     DECLARE num_vots_eliminar INT;
     DECLARE num_escons_finals INT;
     DECLARE esco INT DEFAULT 1;
+
     
     -- Obtenemos el número de escaños para la provincia dada
-    SELECT num_escons INTO num_escons FROM provincies WHERE provincia_id = provincia_id;
+    SELECT num_escons INTO num_escons FROM provincies WHERE provincia_id = Pprovincia_id;
     
     -- Obtenemos los votos totales para la provincia dada
-    SELECT SUM(vots) INTO total_vots_prov FROM vots_candidatures_prov WHERE provincia_id = provincia_id;
+    SELECT SUM(vots) INTO total_vots_prov FROM vots_candidatures_prov WHERE provincia_id = Pprovincia_id;
     
     -- Creamos una tabla temporal para almacenar los resultados intermedios
-    CREATE TEMPORARY TABLE tmp_candidatures (
+    CREATE TABLE tmp_candidatures (
         candidatura_id INT,
         num_vots INT,
         eliminada BOOLEAN DEFAULT FALSE
@@ -48,7 +48,7 @@ BEGIN
     
     -- Insertamos los votos de cada candidatura en la tabla temporal
     INSERT INTO tmp_candidatures (candidatura_id, num_vots_provincia) SELECT candidatura_id, vots FROM vots_candidatures_prov
-    WHERE provincia_id = provincia_id GROUP BY candidatura_id;
+    WHERE provincia_id = Pprovincia_id GROUP BY candidatura_id;
     
     -- Eliminamos cualquier candidatura que tenga menos del 5% de los votos totales para la provincia
     SET num_vots_eliminar = FLOOR(total_vots_prov * 0.05);
@@ -56,31 +56,23 @@ BEGIN
     SELECT COUNT(*) INTO eliminats FROM tmp_candidatures WHERE eliminada = TRUE;
     
 -- Crear tabla temporal para guardar los resultados
-CREATE TEMPORARY TABLE tmp_escons (candidatura_id INT, esco_id INT, num_vots FLOAT);
+CREATE TABLE tmp_escons (eleccio_id INT, provincia_id INT, candidatura_id INT, esco_id INT, num_vots FLOAT);
 
 -- Loop para dividir los votos por los escaños correspondientes
-
 WHILE esco <= num_escons DO
-    INSERT INTO tmp_escons (candidatura_id, esco_id, num_vots)
-    SELECT c.candidatura_id, esco, c.num_vots / esco
+    INSERT INTO tmp_escons (eleccio_id, provincia_id, candidatura_id, esco_id, num_vots)
+    SELECT Peleccio_id, Pprovincia_id, c.candidatura_id, esco, c.num_vots / esco
     FROM tmp_candidatures c
-    WHERE c.provincia_id = provincia_id AND c.eliminada = FALSE;
+    WHERE c.provincia_id = Pprovincia_id AND c.eliminada = FALSE;
     SET esco = esco + 1;
 END WHILE;
 
--- Seleccionar los resultados más altos hasta el número de escaños correspondiente
+/*-- Seleccionar los resultados más altos hasta el número de escaños correspondiente
 INSERT INTO lleis_dhont (eleccio_id, provincia_id, candidatura_id, num_escons_finals)
 SELECT eleccio_id, provincia_id, candidatura_id, SUM(esco_id <= num_escons) as num_escons_finals
 FROM tmp_escons
 GROUP BY eleccio_id, provincia_id, candidatura_id
 ORDER BY eleccio_id, provincia_id, num_escons_finals DESC;
-
-    -- Insertamos los resultados finales en la tabla "lleis_dhont"
-INSERT INTO lleis_dhont (eleccio_id, provincia_id, candidatura_id, num_escons_finals)
--- MODIFICA LA TABLA llei_dhont Para que sea igual a lo de arriba (eleccio_id, provincia_id, candidatura_id, num_escons_finals)
-SELECT eleccio_id, provincia_id, candidatura_id, num_escons_finals FROM tmp_dhont;END //
-
-
+*/
 -- Eliminar tabla temporal
-DROP TABLE tmp_escons;
-DROP TABLE tmp_candidatures;
+END //
