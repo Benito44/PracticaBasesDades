@@ -40,8 +40,7 @@ BEGIN
     SELECT SUM(vots) INTO total_vots_prov FROM vots_candidatures_prov WHERE provincia_id = Pprovincia_id;
     
         DROP TABLE if exists tmp_candidatures;
-    -- Creamos una tabla temporal para almacenar los resultados intermedios
-    CREATE TABLE tmp_candidatures (
+        CREATE TABLE tmp_candidatures (
         candidatura_id INT,
         num_vots INT,
         eliminada BOOLEAN DEFAULT FALSE
@@ -57,7 +56,6 @@ BEGIN
     SELECT COUNT(*) INTO eliminats FROM tmp_candidatures WHERE eliminada = TRUE;
     
 DROP TABLE if exists tmp_escons;
--- Crear tabla temporal para guardar los resultados
 CREATE TABLE tmp_escons (eleccio_id INT, provincia_id INT, candidatura_id INT, esco_id INT, num_vots FLOAT);
 
 -- Loop para dividir los votos por los escaños correspondientes
@@ -76,7 +74,7 @@ FROM tmp_escons
 GROUP BY eleccio_id, provincia_id, candidatura_id
 ORDER BY eleccio_id, provincia_id, num_escons_finals DESC;
 */
--- Eliminar tabla temporal
+
 END //
 
 CALL calcul_escons(4,1);
