@@ -2,3 +2,45 @@ Apartat 3 ( 4 punts). Fes el que creguis necessari per mantenir la taula
 vots_condidatures_prov de forma automàtica.
 Atenció:
  No cal mantenir el camp candidats_obtinguts
+
+
+USE mydb;
+DROP TRIGGER IF EXISTS trg_insert_vots_candidatures_prov;
+DROP TRIGGER IF EXISTS trg_update_vots_candidatures_prov;
+DROP TRIGGER IF EXISTS trg_delete_vots_candidatures_prov;
+
+DELIMITER //
+
+-- Trigger Insert
+CREATE TRIGGER trg_insert_vots_candidatures_prov AFTER INSERT ON vots_candidatures_mun
+	FOR EACH ROW
+BEGIN
+	IF (SELECT COUNT(*) FROM vots_candidatures_prov WHERE eleccio_id = NEW.eleccio_id AND provincia_id = NEW.provincia_id AND candidatura_id = NEW.candidatura_id) = 0 THEN
+		INSERT INTO vots_candidatures_prov (eleccio_id, provincia_id, candidatura_id, num_vots)
+		VALUES (NEW.eleccio_id, NEW.provincia_id, NEW.candidatura_id, NEW.num_vots);
+	ELSE
+		UPDATE vots_candidatures_prov
+		SET num_vots = num_vots + NEW.num_vots
+		WHERE eleccio_id = NEW.eleccio_id AND provincia_id = NEW.provincia_id AND candidatura_id = NEW.candidatura_id;
+	END IF;
+END//
+
+-- Trigger Update
+CREATE TRIGGER trg_update_vots_candidatures_prov AFTER UPDATE ON vots_candidatures_mun
+	FOR EACH ROW
+BEGIN
+	UPDATE vots_candidatures_prov
+	SET num_vots = num_vots - OLD.num_vots + NEW.num_vots
+	WHERE eleccio_id = OLD.eleccio_id AND provincia_id = OLD.provincia_id AND candidatura_id = OLD.candidatura_id;
+END//
+
+-- Trigger Delete
+CREATE TRIGGER trg_delete_vots_candidatures_prov AFTER DELETE ON vots_candidatures_mun
+	FOR EACH ROW
+BEGIN
+	UPDATE vots_candidatures_prov
+	SET num_vots = num_vots - OLD.num_vots
+	WHERE eleccio_id = OLD.eleccio_id AND provincia_id = OLD.provincia_id AND candidatura_id = OLD.candidatura_id;
+END//
+
+DELIMITER ;
