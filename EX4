@@ -67,6 +67,14 @@ WHILE(esco < num_escons) DO
     SET esco = esco + 1;
 END WHILE;
 
+-- Loop para dividir los votos por los escaños correspondientes
+-- tienes que hacer una cosa parecida a esto
+WHILE(esco < num_escons) DO
+    INSERT INTO tmp_escons (eleccio_id, provincia_id, candidatura_id, esco_id, num_vots)
+    values( Peleccio_id, Pprovincia_id, (SELECT candidatura_id FROM tmp_candidatures WHERE eliminada = FALSE), esco, num_vots / esco);
+    SET esco = esco + 1;
+END WHILE;
+
 /*-- Seleccionar los resultados más altos hasta el número de escaños correspondiente
 INSERT INTO lleis_dhont (eleccio_id, provincia_id, candidatura_id, num_escons_finals)
 SELECT eleccio_id, provincia_id, candidatura_id, SUM(esco_id <= num_escons) as num_escons_finals
