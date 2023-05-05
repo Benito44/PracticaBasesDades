@@ -39,7 +39,7 @@ BEGIN
 		provincia_id TINYINT,
 		candidatura_id INT,
         vots INT,
-		num_escons TINYINT,
+		num_escons INT,
 	CONSTRAINT pk_llei_dhont PRIMARY KEY (llei_dhont_id)
 	);
 
@@ -79,16 +79,26 @@ WHILE(num_escons_var >= esco) DO
     WHERE c.eliminada = FALSE;
     SET  esco = esco + 1;
 END WHILE;
+DROP TABLE IF EXISTS candidaturas_mas_apariciones;
+
+CREATE TABLE candidaturas_mas_apariciones (
+    candidatura_id INTEGER PRIMARY KEY,
+    num_apariciones INTEGER
+);
 
 -- Seleccionar los resultados más altos hasta el número de escaños correspondiente
-INSERT INTO llei_dhont (eleccio_id, provincia_id, candidatura_id, vots , num_escons)
-SELECT eleccio_id, provincia_id, candidatura_id, num_vots, COUNT(candidatura_id)
+INSERT INTO llei_dhont (eleccio_id, provincia_id, candidatura_id, vots)
+SELECT eleccio_id, provincia_id, candidatura_id, num_vots
 FROM tmp_escons
 GROUP BY provincia_id, candidatura_id, eleccio_id,num_vots
-HAVING candidatura_id
 ORDER BY num_vots DESC
 LIMIT num_escons_var;
--- Eliminar tabla temporal
+
+INSERT INTO candidaturas_mas_apariciones (candidatura_id, num_apariciones)
+SELECT candidatura_id, COUNT(*) AS num_apariciones 
+FROM llei_dhont 
+GROUP BY candidatura_id 
+ORDER BY num_apariciones DESC;
 END //
 
 CALL calcul_escons(4,1);
