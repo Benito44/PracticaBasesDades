@@ -23,7 +23,7 @@ DROP PROCEDURE if exists calcul_escons;
 DELIMITER //
 CREATE PROCEDURE calcul_escons(IN Pprovincia_id INT,IN Peleccio_id INT)
 BEGIN
-    DECLARE num_escons INT;
+    DECLARE num_escons_var INT;
     DECLARE total_vots_prov INT;
     DECLARE eliminats INT DEFAULT 0;
     DECLARE quota INT;
@@ -34,13 +34,14 @@ BEGIN
 
     
     -- Obtenemos el número de escaños para la provincia dada
-    SELECT num_escons INTO num_escons FROM provincies WHERE provincia_id = Pprovincia_id;
-    
+    SET num_escons_var = (SELECT num_escons FROM provincies WHERE provincia_id = Pprovincia_id);
+
     -- Obtenemos los votos totales para la provincia dada
     SELECT SUM(vots) INTO total_vots_prov FROM vots_candidatures_prov WHERE provincia_id = Pprovincia_id;
     
         DROP TABLE if exists tmp_candidatures;
-        CREATE TABLE tmp_candidatures (
+    -- Creamos una tabla temporal para almacenar los resultados intermedios
+    CREATE TABLE tmp_candidatures (
         candidatura_id INT,
         num_vots INT,
         eliminada BOOLEAN DEFAULT FALSE
@@ -56,33 +57,25 @@ BEGIN
     SELECT COUNT(*) INTO eliminats FROM tmp_candidatures WHERE eliminada = TRUE;
     
 DROP TABLE if exists tmp_escons;
+-- Crear tabla temporal para guardar los resultados
 CREATE TABLE tmp_escons (eleccio_id INT, provincia_id INT, candidatura_id INT, esco_id INT, num_vots FLOAT);
 
 -- Loop para dividir los votos por los escaños correspondientes
-WHILE(esco < num_escons) DO
+WHILE(num_escons_var >= esco) DO
     INSERT INTO tmp_escons (eleccio_id, provincia_id, candidatura_id, esco_id, num_vots)
     SELECT Peleccio_id, Pprovincia_id, c.candidatura_id, esco, c.num_vots / esco
     FROM tmp_candidatures c
     WHERE c.eliminada = FALSE;
-    SET esco = esco + 1;
+    SET  esco = esco + 1;
 END WHILE;
 
--- Loop para dividir los votos por los escaños correspondientes
--- tienes que hacer una cosa parecida a esto
-WHILE(esco < num_escons) DO
-    INSERT INTO tmp_escons (eleccio_id, provincia_id, candidatura_id, esco_id, num_vots)
-    values( Peleccio_id, Pprovincia_id, (SELECT candidatura_id FROM tmp_candidatures WHERE eliminada = FALSE), esco, num_vots / esco);
-    SET esco = esco + 1;
-END WHILE;
-
-/*-- Seleccionar los resultados más altos hasta el número de escaños correspondiente
-INSERT INTO lleis_dhont (eleccio_id, provincia_id, candidatura_id, num_escons_finals)
-SELECT eleccio_id, provincia_id, candidatura_id, SUM(esco_id <= num_escons) as num_escons_finals
+-- Seleccionar los resultados más altos hasta el número de escaños correspondiente
+INSERT INTO llei_dhont (eleccio_id, provincia_id, candidatura_id, num_escons)
+SELECT eleccio_id, provincia_id, candidatura_id, SUM(esco_id <= num_escons_var) as num_escons
 FROM tmp_escons
 GROUP BY eleccio_id, provincia_id, candidatura_id
 ORDER BY eleccio_id, provincia_id, num_escons_finals DESC;
-*/
-
+-- Eliminar tabla temporal
 END //
 
 CALL calcul_escons(4,1);
