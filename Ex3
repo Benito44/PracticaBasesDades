@@ -3,7 +3,6 @@ vots_condidatures_prov de forma automàtica.
 Atenció:
  No cal mantenir el camp candidats_obtinguts
 
-
 USE mydb;
 DROP TRIGGER IF EXISTS trg_insert_vots_candidatures_prov;
 DROP TRIGGER IF EXISTS trg_update_vots_candidatures_prov;
@@ -36,12 +35,12 @@ BEGIN
 	WHERE candidatura_id = OLD.candidatura_id;
 END//
 -- Trigger Delete
+DELIMITER //
+DROP TRIGGER IF EXISTS trg_delete_vots_candidatures_prov;
 CREATE TRIGGER trg_delete_vots_candidatures_prov AFTER DELETE ON vots_candidatures_mun
 	FOR EACH ROW
 BEGIN
 	UPDATE vots_candidatures_prov
-	SET num_vots = num_vots - OLD.num_vots
-	WHERE eleccio_id = OLD.eleccio_id AND provincia_id = OLD.provincia_id AND candidatura_id = OLD.candidatura_id;
+	SET vots = vots - OLD.vots
+	WHERE candidatura_id = OLD.candidatura_id;
 END//
-
-DELIMITER ;
