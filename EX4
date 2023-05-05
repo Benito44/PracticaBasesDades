@@ -32,6 +32,17 @@ BEGIN
     DECLARE num_escons_finals INT;
     DECLARE esco INT DEFAULT 1;
 
+	DROP TABLE IF EXISTS llei_dhont;
+	CREATE TABLE llei_dhont (
+		llei_dhont_id  INT AUTO_INCREMENT,
+		eleccio_id TINYINT,
+		provincia_id TINYINT,
+		candidatura_id INT,
+        vots INT,
+		num_escons TINYINT,
+	CONSTRAINT pk_llei_dhont PRIMARY KEY (llei_dhont_id)
+	);
+
     
     -- Obtenemos el número de escaños para la provincia dada
     SET num_escons_var = (SELECT num_escons FROM provincies WHERE provincia_id = Pprovincia_id);
@@ -70,11 +81,13 @@ WHILE(num_escons_var >= esco) DO
 END WHILE;
 
 -- Seleccionar los resultados más altos hasta el número de escaños correspondiente
-INSERT INTO llei_dhont (eleccio_id, provincia_id, candidatura_id, num_escons)
-SELECT eleccio_id, provincia_id, candidatura_id, SUM(esco_id <= num_escons_var) as num_escons
+INSERT INTO llei_dhont (eleccio_id, provincia_id, candidatura_id, vots , num_escons)
+SELECT eleccio_id, provincia_id, candidatura_id, num_vots, COUNT(candidatura_id)
 FROM tmp_escons
-GROUP BY eleccio_id, provincia_id, candidatura_id
-ORDER BY eleccio_id, provincia_id, num_escons_finals DESC;
+GROUP BY provincia_id, candidatura_id, eleccio_id,num_vots
+HAVING candidatura_id
+ORDER BY num_vots DESC
+LIMIT num_escons_var;
 -- Eliminar tabla temporal
 END //
 
