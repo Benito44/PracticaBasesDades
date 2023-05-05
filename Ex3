@@ -26,14 +26,15 @@ BEGIN
 END//
 
 -- Trigger Update
+DELIMITER //
+DROP TRIGGER IF EXISTS trg_update_vots_candidatures_prov;
 CREATE TRIGGER trg_update_vots_candidatures_prov AFTER UPDATE ON vots_candidatures_mun
 	FOR EACH ROW
 BEGIN
 	UPDATE vots_candidatures_prov
-	SET num_vots = num_vots - OLD.num_vots + NEW.num_vots
-	WHERE eleccio_id = OLD.eleccio_id AND provincia_id = OLD.provincia_id AND candidatura_id = OLD.candidatura_id;
+	SET vots = vots - OLD.vots + NEW.vots
+	WHERE candidatura_id = OLD.candidatura_id;
 END//
-
 -- Trigger Delete
 CREATE TRIGGER trg_delete_vots_candidatures_prov AFTER DELETE ON vots_candidatures_mun
 	FOR EACH ROW
